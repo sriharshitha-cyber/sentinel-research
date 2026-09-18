@@ -1,0 +1,67 @@
+[
+  {
+    "employee_id": "U102",
+    "name": "Aarav Sharma",
+    "email": "aarav@xyz.com",
+    "department": "Finance",
+    "role": "Finance",
+    "clearance": "Internal",
+    "status": "active",
+    "password_hash": "846d5e88a9ef4611468fbdc4a9edfea93619f47eaa9d30692aa1c6d2aa1ed6c3",
+    "password_salt": "d45227dfae872a4d",
+    "must_change_password": false,
+    "is_admin": false
+  },
+  {
+    "employee_id": "U205",
+    "name": "Employee Two",
+    "email": "employee2@xyz.com",
+    "department": "Marketing",
+    "role": "Marketing",
+    "clearance": "Internal",
+    "status": "active",
+    "password_hash": "3ea3ce1aeada290647b31022976bd02edf8633b6bb1a9ebea8c13aa30702ff45",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": true,
+    "is_admin": false
+  },
+  {
+    "employee_id": "U301",
+    "name": "Employee Three",
+    "email": "rohan@xyz.com",
+    "department": "Finance",
+    "role": "Finance",
+    "clearance": "Internal",
+    "status": "active",
+    "password_hash": "3ea3ce1aeada290647b31022976bd02edf8633b6bb1a9ebea8c13aa30702ff45",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": true,
+    "is_admin": false
+  },
+  {
+    "employee_id": "A901",
+    "name": "Sarah Chen",
+    "email": "sarah.chen@xyz.com",
+    "department": "Executive",
+    "role": "Executive",
+    "clearance": "Restricted",
+    "status": "active",
+    "password_hash": "3ea3ce1aeada290647b31022976bd02edf8633b6bb1a9ebea8c13aa30702ff45",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": false,
+    "is_admin": true
+  },
+  {
+    "employee_id": "E404",
+    "name": "David Miller",
+    "email": "david.miller@xyz.com",
+    "department": "Engineering",
+    "role": "Engineer",
+    "clearance": "Internal",
+    "status": "suspended",
+    "password_hash": "3ea3ce1aeada290647b31022976bd02edf8633b6bb1a9ebea8c13aa30702ff45",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": true,
+    "is_admin": false
+  }
+]

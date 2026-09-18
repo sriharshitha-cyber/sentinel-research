@@ -1,0 +1,132 @@
+﻿/* Sentinel Research - Modern Enterprise Styling with Clean System Font */
+:root {
+  --bg-dark: #0b0f19;
+  --bg-light: #f8fafc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-dark);
+  color: #f1f5f9;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body.theme-light {
+  background-color: var(--bg-light);
+  color: #0f172a;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Modern Clean Panels - Dark Mode */
+.glass-panel {
+  background: #131b2e;
+  border: 1px solid #1e293b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.glass-panel-elevated {
+  background: #17223b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Modern Clean Panels - Light Mode */
+body.theme-light .glass-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .glass-panel-elevated {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Danger & Success Panels */
+.glass-panel-danger {
+  background: #2a1217;
+  border: 1px solid #881337;
+}
+
+body.theme-light .glass-panel-danger {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+}
+
+.glass-panel-success {
+  background: #0f291e;
+  border: 1px solid #065f46;
+}
+
+body.theme-light .glass-panel-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+/* Badges */
+.badge-clearance-public {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+body.theme-light .badge-clearance-public {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.badge-clearance-internal {
+  background: #1e3a8a33;
+  color: #60a5fa;
+  border: 1px solid #2563eb4d;
+}
+body.theme-light .badge-clearance-internal {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-clearance-confidential {
+  background: #78350f33;
+  color: #fbbf24;
+  border: 1px solid #d977064d;
+}
+body.theme-light .badge-clearance-confidential {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.badge-clearance-restricted {
+  background: #88133733;
+  color: #fb7185;
+  border: 1px solid #e11d484d;
+}
+body.theme-light .badge-clearance-restricted {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+body.theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}

@@ -1,4 +1,4 @@
-﻿// Top Header Component with Prominent Dedicated Log Out Button
+// Top Header Component with Prominent Dedicated Log Out Button
 window.Header = function ({ employee, onLogout, theme, onToggleTheme }) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const isLight = theme === "light";
@@ -51,20 +51,27 @@ window.Header = function ({ employee, onLogout, theme, onToggleTheme }) {
       "div",
       { className: "flex items-center gap-3" },
 
-      // Theme Switcher Button (Sun / Moon)
+      // Theme Switcher Button (Light / Dark / Anime Animated)
       React.createElement(
         "button",
         {
           onClick: onToggleTheme,
-          className: `p-2 rounded-lg border text-xs flex items-center gap-1.5 transition-colors ${
-            isLight
+          className: `py-1.5 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm ${
+            theme === "animated"
+              ? "bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border-blue-400/50 text-blue-200 hover:border-blue-300"
+              : isLight
               ? "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700"
               : "bg-slate-950 hover:bg-slate-800 border-slate-700 text-slate-300"
           }`,
-          title: isLight ? "Switch to Dark Mode" : "Switch to Light Mode"
+          title: `Theme: ${theme ? theme.toUpperCase() : "DARK"} (Click to cycle Light / Dark / Anime Animated)`
         },
-        React.createElement(window.SentinelIcon, { name: isLight ? "moon" : "sun", className: "w-4 h-4" }),
-        React.createElement("span", { className: "hidden sm:inline" }, isLight ? "Dark" : "Light")
+        React.createElement(window.SentinelIcon, {
+          name: theme === "light" ? "sun" : theme === "animated" ? "sparkles" : "moon",
+          className: `w-3.5 h-3.5 ${theme === "animated" ? "text-amber-300" : ""}`
+        }),
+        React.createElement("span", { className: "hidden sm:inline capitalize" },
+          theme === "animated" ? "Anime" : theme === "light" ? "Light" : "Dark"
+        )
       ),
 
       // Employee Profile Chip

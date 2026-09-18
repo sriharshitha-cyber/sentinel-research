@@ -1,4 +1,4 @@
-﻿/* Sentinel Research - Modern Enterprise Styling with Clean System Font */
+/* Sentinel Research - Modern Enterprise Styling with Clean System Font */
 :root {
   --bg-dark: #0b0f19;
   --bg-light: #f8fafc;
@@ -17,6 +17,41 @@ body {
 body.theme-light {
   background-color: var(--bg-light);
   color: #0f172a;
+}
+
+/* Theme Animated: Studio Anime Workspace with Office Template */
+body.theme-animated {
+  background: linear-gradient(rgba(11, 15, 25, 0.84), rgba(15, 23, 42, 0.90)),
+              url('/assets/office_background.jpg') center center / cover no-repeat fixed;
+  color: #f8fafc;
+}
+
+body.theme-animated .glass-panel {
+  background: rgba(15, 23, 42, 0.80);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+body.theme-animated .glass-panel-elevated {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-animated header {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+body.theme-animated aside {
+  background: rgba(11, 15, 25, 0.85) !important;
+  backdrop-filter: blur(14px) !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.2) !important;
 }
 
 .font-mono {

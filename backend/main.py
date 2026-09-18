@@ -1,4 +1,4 @@
-﻿import os
+import os
 from typing import Optional, List
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, status
@@ -169,6 +169,8 @@ def get_audit_detail(request_id: str):
 if FRONTEND_DIR.exists():
     app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
     app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
+    if (FRONTEND_DIR / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="assets")
 
     @app.get("/")
     def serve_index():

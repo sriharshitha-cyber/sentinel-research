@@ -16,13 +16,15 @@ function App() {
   });
 
   const isLight = theme === "light";
+  const isAnimated = theme === "animated";
 
-  // Apply theme to body element
+  // Apply theme to body element (supports "light", "dark", "animated")
   useEffect(() => {
+    document.body.classList.remove("theme-light", "theme-animated");
     if (theme === "light") {
       document.body.classList.add("theme-light");
-    } else {
-      document.body.classList.remove("theme-light");
+    } else if (theme === "animated") {
+      document.body.classList.add("theme-animated");
     }
     localStorage.setItem("sentinel_theme", theme);
   }, [theme]);
@@ -42,7 +44,7 @@ function App() {
   }, []);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+    setTheme((prev) => (prev === "dark" ? "light" : prev === "light" ? "animated" : "dark"));
   };
 
   const handleLoginSuccess = (user) => {
@@ -261,17 +263,74 @@ function App() {
             React.createElement("p", { className: isLight ? "text-slate-500" : "text-slate-400" }, "Manage display preferences and security controls."),
             React.createElement(
               "div",
-              { className: "flex items-center gap-3 pt-2" },
+              { className: "pt-2 space-y-2" },
+              React.createElement("div", { className: "font-medium text-slate-300" }, "Select Interface Theme:"),
               React.createElement(
-                "button",
-                {
-                  onClick: toggleTheme,
-                  className: `px-4 py-2 rounded-lg border flex items-center gap-2 ${
-                    isLight ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800" : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200"
-                  }`
-                },
-                React.createElement(window.SentinelIcon, { name: isLight ? "moon" : "sun", className: "w-4 h-4" }),
-                `Current Theme: ${isLight ? "Light Mode" : "Dark Mode"} (Click to switch)`
+                "div",
+                { className: "grid grid-cols-1 sm:grid-cols-3 gap-3" },
+                // Dark Mode Button
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => setTheme("dark"),
+                    className: `p-3 rounded-lg border text-left flex flex-col gap-1.5 transition-all ${
+                      theme === "dark"
+                        ? "bg-blue-600/20 border-blue-500 text-white ring-1 ring-blue-500"
+                        : isLight
+                        ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
+                        : "bg-slate-900/60 hover:bg-slate-800 border-slate-800 text-slate-300"
+                    }`
+                  },
+                  React.createElement(
+                    "div",
+                    { className: "flex items-center gap-2 font-semibold" },
+                    React.createElement(window.SentinelIcon, { name: "moon", className: "w-4 h-4 text-blue-400" }),
+                    "Dark Mode"
+                  ),
+                  React.createElement("div", { className: "text-[11px] opacity-75" }, "Standard high-contrast enterprise dark UI.")
+                ),
+                // Light Mode Button
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => setTheme("light"),
+                    className: `p-3 rounded-lg border text-left flex flex-col gap-1.5 transition-all ${
+                      theme === "light"
+                        ? "bg-blue-50 border-blue-500 text-blue-900 ring-1 ring-blue-500"
+                        : isLight
+                        ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
+                        : "bg-slate-900/60 hover:bg-slate-800 border-slate-800 text-slate-300"
+                    }`
+                  },
+                  React.createElement(
+                    "div",
+                    { className: "flex items-center gap-2 font-semibold" },
+                    React.createElement(window.SentinelIcon, { name: "sun", className: "w-4 h-4 text-amber-500" }),
+                    "Light Mode"
+                  ),
+                  React.createElement("div", { className: "text-[11px] opacity-75" }, "Clean daylight daylight palette.")
+                ),
+                // Anime Animated Button
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => setTheme("animated"),
+                    className: `p-3 rounded-lg border text-left flex flex-col gap-1.5 transition-all ${
+                      theme === "animated"
+                        ? "bg-indigo-900/40 border-indigo-400 text-white ring-1 ring-indigo-400"
+                        : isLight
+                        ? "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
+                        : "bg-slate-900/60 hover:bg-slate-800 border-slate-800 text-slate-300"
+                    }`
+                  },
+                  React.createElement(
+                    "div",
+                    { className: "flex items-center gap-2 font-semibold" },
+                    React.createElement(window.SentinelIcon, { name: "sparkles", className: "w-4 h-4 text-amber-300" }),
+                    "Anime Animated"
+                  ),
+                  React.createElement("div", { className: "text-[11px] opacity-75" }, "Studio office background with frosted glass.")
+                )
               )
             ),
             React.createElement(

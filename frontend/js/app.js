@@ -186,13 +186,6 @@ function App() {
                 isRunning: false,
                 theme: theme,
               }),
-            lastResponse &&
-              React.createElement(window.SecurityFlowVisualizer, {
-                authorizationDecisions: lastResponse.authorization_decisions,
-                blockedCount: lastResponse.blocked_count,
-                allowedCount: lastResponse.allowed_count,
-                theme: theme,
-              }),
             lastResponse && React.createElement(window.AnswerDisplay, { response: lastResponse, theme: theme })
           ),
 
@@ -212,39 +205,6 @@ function App() {
             initialSelectedRecord: inspectRecord,
             theme: theme,
           }),
-
-        currentTab === "security-flow" &&
-          React.createElement(
-            "div",
-            { className: "space-y-6" },
-            React.createElement(window.SecurityFlowVisualizer, {
-              authorizationDecisions: lastResponse ? lastResponse.authorization_decisions : [
-                {
-                  document_id: "DOC-201",
-                  title: "Q4 Revenue Forecast",
-                  classification: "Restricted",
-                  decision: "DENY",
-                  reason: "Insufficient clearance (Required: Restricted, Employee: Internal)",
-                  evaluated_clearance: currentUser.clearance,
-                  evaluated_department: currentUser.department,
-                  evaluated_role: currentUser.role
-                },
-                {
-                  document_id: "DOC-101",
-                  title: "Q4 Revenue Forecast",
-                  classification: "Internal",
-                  decision: currentUser.department === "Finance" ? "ALLOW" : "DENY",
-                  reason: currentUser.department === "Finance" ? "Authorized" : "Department mismatch",
-                  evaluated_clearance: currentUser.clearance,
-                  evaluated_department: currentUser.department,
-                  evaluated_role: currentUser.role
-                }
-              ],
-              blockedCount: 1,
-              allowedCount: currentUser.department === "Finance" ? 1 : 0,
-              theme: theme,
-            })
-          ),
 
         currentTab === "admin-audit" &&
           React.createElement(window.AuditDashboardView, {

@@ -7,7 +7,6 @@ window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }
     { id: "my-requests", label: "My Requests", icon: "message-square" },
     { id: "my-access", label: "My Access", icon: "shield-alert" },
     { id: "audit-history", label: "Audit History", icon: "file-text" },
-    { id: "security-flow", label: "Security Engine", icon: "git-merge" },
   ];
 
   if (isAdmin) {
@@ -84,12 +83,12 @@ window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }
         "div",
         { className: "flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs" },
         React.createElement(window.SentinelIcon, { name: "lock", className: "w-3.5 h-3.5" }),
-        "Zero-Trust Boundary"
+        "Deterministic Security Gate"
       ),
       React.createElement(
         "p",
         { className: `text-[11px] leading-snug ${isLight ? "text-slate-500" : "text-slate-400"}` },
-        "Unauthorized document context is blocked deterministically before reaching any LLM."
+        "Security violations and unauthorized document context are blocked deterministically before reaching any LLM."
       )
     )
   );

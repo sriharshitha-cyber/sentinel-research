@@ -6,10 +6,11 @@ window.AgentPipelineStatus = function ({ agentStatuses, blockedCount, allowedCou
 
   const agentsList = [
     { key: "Identity Agent", label: "Identity Agent", icon: "user-check" },
+    { key: "Security Threat Detection", label: "Security Threat Detection", icon: "shield-alert", isGate: true },
     { key: "Query Understanding Agent", label: "Query Understanding", icon: "search" },
     { key: "Authorization Gate", label: "Authorization Gate", icon: "shield-alert", isGate: true },
     { key: "Document Retrieval Agent", label: "Document Retrieval", icon: "file-text" },
-    { key: "Security Guardrail", label: "Security Guardrail", icon: "shield" },
+    { key: "Output Security Check", label: "Output Security Check", icon: "shield" },
     { key: "Evidence Analysis Agent", label: "Evidence Analysis", icon: "layers" },
     { key: "Version & Conflict Agent", label: "Version & Conflict", icon: "git-commit" },
     { key: "Answer Agent", label: "Answer Agent", icon: "bot" },
@@ -19,20 +20,20 @@ window.AgentPipelineStatus = function ({ agentStatuses, blockedCount, allowedCou
 
   const getStatusBadge = (statusStr, isGate) => {
     const s = (statusStr || "Pending").toLowerCase();
+    if (s.includes("violation") || s.includes("denied") || s.includes("blocked")) {
+      return React.createElement(
+        "span",
+        { className: "px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1 font-mono" },
+        React.createElement(window.SentinelIcon, { name: "shield-x", className: "w-3 h-3 text-rose-500" }),
+        statusStr
+      );
+    }
     if (s.includes("processing")) {
       return React.createElement(
         "span",
         { className: "px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center gap-1 font-mono" },
         React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" }),
         "Processing"
-      );
-    }
-    if (s.includes("blocked")) {
-      return React.createElement(
-        "span",
-        { className: "px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1 font-mono" },
-        React.createElement(window.SentinelIcon, { name: "shield-x", className: "w-3 h-3 text-rose-500" }),
-        statusStr
       );
     }
     if (s.includes("completed")) {

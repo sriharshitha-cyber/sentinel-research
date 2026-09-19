@@ -1,4 +1,4 @@
-﻿// Answer Display & Citations Component with Safe SentinelIcon & Multi-line Markdown support
+// Answer Display & Citations Component with Safe SentinelIcon & Multi-line Markdown support
 window.AnswerDisplay = function ({ response, theme }) {
   if (!response) return null;
 
@@ -19,16 +19,20 @@ window.AnswerDisplay = function ({ response, theme }) {
         "div",
         { className: "flex items-center gap-2.5" },
         React.createElement("div", { className: `w-8 h-8 rounded-lg flex items-center justify-center ${
-          isAccessLimited
+          response.event_type === "SECURITY_VIOLATION" || response.status === "DENIED"
+            ? isLight ? "bg-rose-100 text-rose-700" : "bg-rose-500/10 text-rose-400"
+            : isAccessLimited
             ? isLight ? "bg-amber-100 text-amber-700" : "bg-amber-500/10 text-amber-400"
             : isLight ? "bg-blue-100 text-blue-700" : "bg-blue-500/10 text-blue-400"
         }` },
-          React.createElement(window.SentinelIcon, { name: isAccessLimited ? "shield-alert" : "bot", className: "w-4 h-4" })
+          React.createElement(window.SentinelIcon, { name: (response.event_type === "SECURITY_VIOLATION" || response.status === "DENIED") ? "shield-alert" : isAccessLimited ? "shield-alert" : "bot", className: "w-4 h-4" })
         ),
         React.createElement(
           "div",
           null,
-          React.createElement("h3", { className: `text-sm font-bold tracking-tight uppercase ${isLight ? "text-slate-900" : "text-white"}` }, "Sentinel Intelligence Response"),
+          React.createElement("h3", { className: `text-sm font-bold tracking-tight uppercase ${isLight ? "text-slate-900" : "text-white"}` },
+            response.event_type === "SECURITY_VIOLATION" ? "Security Violation Blocked" : "Sentinel Intelligence Response"
+          ),
           React.createElement("div", { className: `text-[11px] font-mono ${isLight ? "text-slate-400" : "text-slate-500"}` }, `Request ID: ${response.request_id || "N/A"}`)
         )
       ),
@@ -36,14 +40,16 @@ window.AnswerDisplay = function ({ response, theme }) {
         "span",
         {
           className: `px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1 ${
-            response.status === "SUCCESS"
+            response.event_type === "SECURITY_VIOLATION"
+              ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+              : response.status === "SUCCESS"
               ? isLight ? "bg-emerald-100 text-emerald-700 border border-emerald-300" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
               : response.status === "ACCESS_LIMITED"
               ? isLight ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
               : isLight ? "bg-rose-100 text-rose-700 border border-rose-300" : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
           }`
         },
-        response.status
+        response.event_type === "SECURITY_VIOLATION" ? `ACCESS DENIED (${response.threat_type || "VIOLATION"})` : response.status
       )
     ),
 
@@ -69,7 +75,9 @@ window.AnswerDisplay = function ({ response, theme }) {
           "div",
           { className: `flex items-center gap-2 font-bold ${isLight ? "text-rose-700" : "text-rose-400"}` },
           React.createElement(window.SentinelIcon, { name: "shield-ban", className: "w-4 h-4" }),
-          "SECURITY GUARDRAIL INTERVENTION: Prompt Injection Neutralized"
+          response.event_type === "SECURITY_VIOLATION"
+            ? `SECURITY VIOLATION DETECTED: ${response.threat_type || "POLICY_BREACH"}`
+            : "SECURITY GUARDRAIL INTERVENTION: Prompt Injection Neutralized"
         ),
         response.guardrail_warnings.map((w, idx) =>
           React.createElement("div", { key: idx, className: `text-[11px] pl-6 ${isLight ? "text-slate-600" : "text-slate-300"}` }, `• ${w}`)
@@ -80,14 +88,20 @@ window.AnswerDisplay = function ({ response, theme }) {
     React.createElement(
       "div",
       { className: `p-4 rounded-xl border ${
-        isAccessLimited
+        response.event_type === "SECURITY_VIOLATION"
+          ? "bg-rose-950/20 border-rose-500/50"
+          : isAccessLimited
           ? isLight ? "bg-amber-50/60 border-amber-200" : "bg-slate-900/80 border-amber-500/30"
           : isLight ? "bg-slate-50 border-slate-200" : "bg-slate-900/80 border-slate-700/50"
       }` },
-      React.createElement("div", { className: `text-xs font-bold font-mono uppercase mb-2 ${isLight ? "text-slate-500" : "text-slate-400"}` }, "Synthesized Output:"),
+      React.createElement("div", { className: `text-xs font-bold font-mono uppercase mb-2 ${
+        response.event_type === "SECURITY_VIOLATION" ? "text-rose-400" : isLight ? "text-slate-500" : "text-slate-400"
+      }` }, response.event_type === "SECURITY_VIOLATION" ? "Security Decision:" : "Synthesized Output:"),
       React.createElement(
         "div",
-        { className: `text-sm leading-relaxed whitespace-pre-line font-sans ${isLight ? "text-slate-900" : "text-slate-100"}` },
+        { className: `text-sm leading-relaxed whitespace-pre-line font-sans ${
+          response.event_type === "SECURITY_VIOLATION" ? "text-rose-300 font-semibold" : isLight ? "text-slate-900" : "text-slate-100"
+        }` },
         response.answer
       )
     ),
@@ -122,7 +136,9 @@ window.AnswerDisplay = function ({ response, theme }) {
                   React.createElement("span", null, c.title),
                   React.createElement("span", { className: "text-[10px] px-1.5 py-0.5 rounded badge-clearance-internal" }, c.classification)
                 ),
-                React.createElement("div", { className: `text-[11px] mt-0.5 ${isLight ? "text-slate-500" : "text-slate-400"}` },
+                React.createElement(
+                  "div",
+                  { className: `text-[11px] mt-0.5 ${isLight ? "text-slate-500" : "text-slate-400"}` },
                   `Version ${c.version} • Effective ${c.effective_date}`
                 )
               ),
@@ -147,7 +163,7 @@ window.AnswerDisplay = function ({ response, theme }) {
         }` },
         React.createElement(window.SentinelIcon, { name: "info", className: "w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" }),
         React.createElement("div", null,
-          "Under Sentinel zero-trust policy, confidential/restricted document existence or content is strictly withheld from unauthorized roles. A security audit record has been logged for administrative review."
+          "Under Sentinel security policy, confidential/restricted document existence or content is strictly withheld from unauthorized roles. A persistent security audit record has been logged for administrative review."
         )
       )
   );

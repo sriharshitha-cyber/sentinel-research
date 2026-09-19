@@ -32,10 +32,11 @@ class SentinelPipeline:
         timeline: List[TimelineEvent] = []
         agent_statuses: Dict[str, str] = {
             "Identity Agent": "Processing",
+            "Security Threat Detection": "Pending",
             "Query Understanding Agent": "Pending",
             "Authorization Gate": "Pending",
             "Document Retrieval Agent": "Pending",
-            "Security Guardrail": "Pending",
+            "Output Security Check": "Pending",
             "Evidence Analysis Agent": "Pending",
             "Version & Conflict Agent": "Pending",
             "Answer Agent": "Pending",
@@ -111,12 +112,56 @@ class SentinelPipeline:
             details={"employee_id": employee.employee_id, "department": employee.department, "clearance": employee.clearance}
         ))
 
-        # 2. Query Understanding
+        # 2. Security Threat Detection (CRITICAL: Runs BEFORE retrieval or normal research pipeline)
+        agent_statuses["Security Threat Detection"] = "Processing"
+        threat = self.guardrail_agent.detect_security_threat(question=question, employee=employee, timeline=timeline)
+        if threat:
+            agent_statuses["Security Threat Detection"] = f"Violation ({threat['threat_type']})"
+            agent_statuses["Authorization Gate"] = "Blocked (Security Policy Violation)"
+            agent_statuses["Document Retrieval Agent"] = "Withheld (0 retrieved)"
+            agent_statuses["Answer Agent"] = "Access Denied"
+            agent_statuses["Citation Agent"] = "None"
+            agent_statuses["Audit Agent"] = "Processing"
+
+            audit_record = self.audit_agent.record_security_violation(
+                request_id=req_id,
+                employee=employee,
+                request=question,
+                threat_type=threat["threat_type"],
+                answer=threat["response_text"],
+                timeline=timeline
+            )
+            agent_statuses["Audit Agent"] = "Completed"
+
+            return QueryResponse(
+                request_id=req_id,
+                timestamp=audit_record.timestamp,
+                question=question,
+                answer=threat["response_text"],
+                citations=[],
+                status="DENIED",
+                event_type="SECURITY_VIOLATION",
+                threat_type=threat["threat_type"],
+                authorization_status="DENIED",
+                action="REQUEST_BLOCKED",
+                documents_accessed=[],
+                response_status="ACCESS_DENIED",
+                documents_considered=[],
+                authorization_decisions=[],
+                blocked_count=0,
+                allowed_count=0,
+                timeline=timeline,
+                agent_statuses=agent_statuses,
+                guardrail_warnings=[threat["reason"]]
+            )
+        agent_statuses["Security Threat Detection"] = "Completed (Clean)"
+
+        # 3. Query Understanding
         agent_statuses["Query Understanding Agent"] = "Processing"
         query_info = self.query_agent.process_query(question, timeline)
         agent_statuses["Query Understanding Agent"] = "Completed"
 
-        # 3. Authorization Gate (FIRST: Evaluates permissions BEFORE any document is retrieved)
+        # 4. Authorization Gate (FIRST: Evaluates permissions BEFORE any document is retrieved)
         agent_statuses["Authorization Gate"] = "Processing"
         
         # Discover candidate metadata (IDs, titles, classifications, departments, roles, status) WITHOUT full contents
@@ -140,7 +185,7 @@ class SentinelPipeline:
         else:
             agent_statuses["Authorization Gate"] = f"Completed ({allowed_count} authorized)"
 
-        # 4. Document Retrieval Agent (LATER: Decides whether to retrieve document contents or not based on authorization check)
+        # 5. Document Retrieval Agent (LATER: Decides whether to retrieve document contents or not based on authorization check)
         agent_statuses["Document Retrieval Agent"] = "Processing"
         authorized_docs = self.retrieval_agent.retrieve_authorized_documents(
             candidate_metadata=candidate_metadata,
@@ -154,14 +199,14 @@ class SentinelPipeline:
         else:
             agent_statuses["Document Retrieval Agent"] = f"Withheld (0 retrieved, {blocked_count} refused)"
 
-        # 5. Security Guardrail Inspection (Prompt injection check on authorized text and query)
-        agent_statuses["Security Guardrail"] = "Processing"
+        # 6. Output Security Check (Scans retrieved documents for indirect injections)
+        agent_statuses["Output Security Check"] = "Processing"
         guarded_docs, guardrail_warnings = self.guardrail_agent.inspect_and_guard(
             question=question,
             authorized_docs=authorized_docs,
             timeline=timeline
         )
-        agent_statuses["Security Guardrail"] = "Completed"
+        agent_statuses["Output Security Check"] = "Completed"
 
         # 6. Evidence Analysis (ONLY authorized docs enter here!)
         agent_statuses["Evidence Analysis Agent"] = "Processing"
@@ -222,6 +267,12 @@ class SentinelPipeline:
             answer=final_answer,
             citations=citations,
             status=request_status,
+            event_type=audit_record.event_type,
+            threat_type=audit_record.threat_type,
+            authorization_status=audit_record.authorization_status,
+            action=audit_record.action,
+            documents_accessed=audit_record.documents_accessed,
+            response_status=audit_record.response_status,
             documents_considered=candidate_ids,
             authorization_decisions=auth_decisions,
             blocked_count=blocked_count,

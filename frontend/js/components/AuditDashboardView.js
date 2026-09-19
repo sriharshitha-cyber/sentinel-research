@@ -1,4 +1,4 @@
-﻿// Comprehensive Admin Audit Dashboard with safe SentinelIcon
+// Comprehensive Admin Audit Dashboard with safe SentinelIcon
 window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, theme }) {
   const [logs, setLogs] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -33,14 +33,22 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, record) => {
+    if (record && record.event_type === "SECURITY_VIOLATION") {
+      return React.createElement(
+        "span",
+        { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 font-mono inline-flex items-center gap-1" },
+        React.createElement(window.SentinelIcon, { name: "shield-alert", className: "w-3 h-3 text-rose-400" }),
+        record.threat_type ? `VIOLATION: ${record.threat_type}` : "SECURITY VIOLATION"
+      );
+    }
     switch ((status || "").toUpperCase()) {
       case "SUCCESS":
         return React.createElement("span", { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 font-mono" }, "SUCCESS");
       case "ACCESS_LIMITED":
         return React.createElement("span", { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-mono" }, "ACCESS LIMITED");
       case "DENIED":
-        return React.createElement("span", { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30 font-mono" }, "DENIED");
+        return React.createElement("span", { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30 font-mono" }, "ACCESS DENIED");
       default:
         return React.createElement("span", { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-mono" }, status);
     }
@@ -216,7 +224,7 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
                   React.createElement("td", { className: `p-3 text-xs ${isLight ? "text-slate-700" : "text-slate-300"}` },
                     (record.evidence_used || []).join(", ") || "None"
                   ),
-                  React.createElement("td", { className: "p-3" }, getStatusBadge(record.status)),
+                  React.createElement("td", { className: "p-3" }, getStatusBadge(record.status, record)),
                   React.createElement("td", { className: "p-3 pr-4 text-right" },
                     React.createElement(
                       "button",
@@ -253,12 +261,12 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
             React.createElement(
               "div",
               null,
-              React.createElement("div", { className: "flex items-center gap-2" },
+              React.createElement("div", { className: "flex items-center gap-2 flex-wrap" },
                 React.createElement("h3", { className: "text-base font-bold font-sans tracking-tight" }, `REQUEST AUDIT TRAIL: ${selectedRecord.request_id}`),
-                getStatusBadge(selectedRecord.status)
+                getStatusBadge(selectedRecord.status, selectedRecord)
               ),
               React.createElement("div", { className: "text-xs text-slate-400 mt-1 font-mono" },
-                `Employee: ${selectedRecord.user_id} (${selectedRecord.department} • ${selectedRecord.role} • ${selectedRecord.clearance})`
+                `Employee: ${selectedRecord.employee_name || selectedRecord.user_name || selectedRecord.user_id} (${selectedRecord.user_id} • ${selectedRecord.department} • ${selectedRecord.role} • ${selectedRecord.clearance})`
               )
             ),
             React.createElement(
@@ -268,6 +276,27 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
             )
           ),
 
+          // Security Violation Banner (if applicable)
+          selectedRecord.event_type === "SECURITY_VIOLATION" &&
+            React.createElement(
+              "div",
+              { className: "mb-6 p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-xs font-mono space-y-2" },
+              React.createElement(
+                "div",
+                { className: "flex items-center gap-2 text-rose-400 font-bold uppercase" },
+                React.createElement(window.SentinelIcon, { name: "shield-alert", className: "w-4 h-4 text-rose-500" }),
+                `SECURITY VIOLATION DETECTED: ${selectedRecord.threat_type || "POLICY_BREACH"}`
+              ),
+              React.createElement(
+                "div",
+                { className: "grid grid-cols-2 gap-2 pt-1 text-[11px] text-slate-300" },
+                React.createElement("div", null, React.createElement("span", { className: "text-slate-400" }, "Authorization: "), React.createElement("span", { className: "font-bold text-rose-400" }, selectedRecord.authorization_status || "DENIED")),
+                React.createElement("div", null, React.createElement("span", { className: "text-slate-400" }, "Action Taken: "), React.createElement("span", { className: "font-bold text-rose-400" }, selectedRecord.action || "REQUEST_BLOCKED")),
+                React.createElement("div", null, React.createElement("span", { className: "text-slate-400" }, "Documents Accessed: "), React.createElement("span", { className: "font-bold text-emerald-400" }, "NONE (0)")),
+                React.createElement("div", null, React.createElement("span", { className: "text-slate-400" }, "Log Immutability: "), React.createElement("span", { className: "font-bold text-blue-400" }, "IMMUTABLE & PERSISTED"))
+              )
+            ),
+
           // User Query & Answer Grounding
           React.createElement(
             "div",
@@ -276,15 +305,15 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
             }` },
             React.createElement("div", null,
               React.createElement("span", { className: "text-slate-400 uppercase text-[10px]" }, "User Query: "),
-              React.createElement("span", { className: `font-semibold ${isLight ? "text-slate-900" : "text-slate-100"}` }, `"${selectedRecord.question}"`)
+              React.createElement("span", { className: `font-semibold ${isLight ? "text-slate-900" : "text-slate-100"}` }, `"${selectedRecord.request || selectedRecord.question}"`)
             ),
             React.createElement("div", null,
               React.createElement("span", { className: "text-slate-400 uppercase text-[10px]" }, "Synthesized Output: "),
-              React.createElement("span", { className: isLight ? "text-slate-700" : "text-slate-300" }, selectedRecord.answer)
+              React.createElement("span", { className: `whitespace-pre-line ${selectedRecord.event_type === "SECURITY_VIOLATION" ? "text-rose-400 font-bold" : isLight ? "text-slate-700" : "text-slate-300"}` }, selectedRecord.answer)
             ),
             React.createElement("div", { className: "flex items-center gap-4 text-[11px] pt-1" },
               React.createElement("span", { className: "text-slate-400" }, `Considered: ${(selectedRecord.documents_considered || []).join(", ") || "None"}`),
-              React.createElement("span", { className: "text-emerald-600 dark:text-emerald-400" }, `Evidence Ingested: ${(selectedRecord.evidence_used || []).join(", ") || "Zero"}`)
+              React.createElement("span", { className: "text-emerald-600 dark:text-emerald-400" }, `Evidence Ingested: ${(selectedRecord.documents_accessed && selectedRecord.documents_accessed.length > 0 ? selectedRecord.documents_accessed.join(", ") : (selectedRecord.evidence_used || []).join(", ")) || "Zero"}`)
             )
           ),
 

@@ -1,4 +1,4 @@
-﻿import random
+import random
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from .base_agent import BaseAgent
@@ -20,6 +20,57 @@ class AuditAgent(BaseAgent):
         rand_num = random.randint(10000, 99999)
         return f"REQ-{date_part}-{rand_num}"
 
+    def record_security_violation(
+        self,
+        request_id: str,
+        employee: EmployeeRecord,
+        request: str,
+        threat_type: str,
+        answer: str,
+        timeline: List[TimelineEvent]
+    ) -> AuditRecord:
+        now_iso = datetime.now().astimezone().isoformat()
+        record = AuditRecord(
+            request_id=request_id,
+            timestamp=now_iso,
+            user_id=employee.employee_id,
+            employee_name=employee.name,
+            user_name=employee.name,
+            department=employee.department,
+            role=employee.role,
+            clearance=employee.clearance,
+            request=request,
+            question=request,
+            event_type="SECURITY_VIOLATION",
+            threat_type=threat_type,
+            authorization_status="DENIED",
+            action="REQUEST_BLOCKED",
+            documents_accessed=[],
+            response_status="ACCESS_DENIED",
+            documents_considered=[],
+            authorization_decisions=[],
+            evidence_used=[],
+            answer=answer,
+            citations=[],
+            status="DENIED",
+            timeline=timeline
+        )
+        self.db.append_audit_record(record)
+        self.log_event(
+            timeline,
+            "AUDIT",
+            "DENIED",
+            f"SECURITY VIOLATION LOGGED: Request {request_id} blocked for '{threat_type}'. Audit ledger persisted.",
+            details={
+                "request_id": request_id,
+                "threat_type": threat_type,
+                "action": "REQUEST_BLOCKED",
+                "authorization_status": "DENIED",
+                "documents_accessed": []
+            }
+        )
+        return record
+
     def record_request(
         self,
         request_id: str,
@@ -31,7 +82,10 @@ class AuditAgent(BaseAgent):
         answer: str,
         citations: List[CitationItem],
         status: str,
-        timeline: List[TimelineEvent]
+        timeline: List[TimelineEvent],
+        event_type: str = "STANDARD_QUERY",
+        threat_type: Optional[str] = None,
+        action: Optional[str] = None
     ) -> AuditRecord:
         now_iso = datetime.now().astimezone().isoformat()
 
@@ -40,15 +94,27 @@ class AuditAgent(BaseAgent):
         for d in authorization_decisions:
             sanitized_decisions.append(d)
 
+        auth_status = "DENIED" if status == "DENIED" else ("ACCESS_LIMITED" if status == "ACCESS_LIMITED" else "AUTHORIZED")
+        default_action = "REQUEST_BLOCKED" if status == "DENIED" else ("RETRIEVAL_ALLOWED" if status == "SUCCESS" else "WITHHELD")
+        resp_status = "ACCESS_DENIED" if status == "DENIED" else ("ACCESS_LIMITED" if status == "ACCESS_LIMITED" else "SUCCESS")
+
         record = AuditRecord(
             request_id=request_id,
             timestamp=now_iso,
             user_id=employee.employee_id,
+            employee_name=employee.name,
             user_name=employee.name,
             department=employee.department,
             role=employee.role,
             clearance=employee.clearance,
+            request=question,
             question=question,
+            event_type=event_type,
+            threat_type=threat_type,
+            authorization_status=auth_status,
+            action=action or default_action,
+            documents_accessed=evidence_used,
+            response_status=resp_status,
             documents_considered=documents_considered,
             authorization_decisions=sanitized_decisions,
             evidence_used=evidence_used,
@@ -63,7 +129,7 @@ class AuditAgent(BaseAgent):
         self.log_event(
             timeline,
             "AUDIT",
-            "SUCCESS",
+            "SUCCESS" if status == "SUCCESS" else "INFO",
             f"Audit ledger updated: Request {request_id} recorded with status '{status}'",
             details={
                 "request_id": request_id,

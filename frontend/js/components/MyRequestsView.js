@@ -1,4 +1,4 @@
-﻿// My Requests History View Component with safe SentinelIcon
+// My Requests History View Component with safe SentinelIcon
 window.MyRequestsView = function ({ employee, onViewDetail, theme }) {
   const [requests, setRequests] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -80,17 +80,24 @@ window.MyRequestsView = function ({ employee, onViewDetail, theme }) {
               React.createElement(
                 "div",
                 { className: "flex items-center gap-2" },
-                React.createElement(
-                  "span",
-                  { className: `px-2 py-0.5 rounded text-[10px] font-bold ${
-                    isSuccess
-                      ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                      : isLimited
-                      ? "bg-amber-100 text-amber-700 border border-amber-300"
-                      : "bg-rose-100 text-rose-700 border border-rose-300"
-                  }` },
-                  r.status
-                ),
+                r.event_type === "SECURITY_VIOLATION"
+                  ? React.createElement(
+                      "span",
+                      { className: "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 inline-flex items-center gap-1" },
+                      React.createElement(window.SentinelIcon, { name: "shield-alert", className: "w-3 h-3 text-rose-400" }),
+                      r.threat_type ? `VIOLATION: ${r.threat_type}` : "SECURITY VIOLATION"
+                    )
+                  : React.createElement(
+                      "span",
+                      { className: `px-2 py-0.5 rounded text-[10px] font-bold ${
+                        isSuccess
+                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                          : isLimited
+                          ? "bg-amber-100 text-amber-700 border border-amber-300"
+                          : "bg-rose-100 text-rose-700 border border-rose-300"
+                      }` },
+                      r.status
+                    ),
                 React.createElement(
                   "button",
                   {

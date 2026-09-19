@@ -151,6 +151,8 @@ function App() {
         currentTab: currentTab,
         onSelectTab: setCurrentTab,
         isAdmin: currentUser.is_admin || currentUser.clearance === "Restricted",
+        isManager: isManager,
+        employee: currentUser,
         theme: theme,
         onLogout: handleLogout,
       }),

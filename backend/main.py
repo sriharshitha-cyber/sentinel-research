@@ -138,34 +138,92 @@ def run_query(req: QueryRequest):
 
 @app.get("/api/audit")
 def get_audit_logs(
+    viewer_id: Optional[str] = Query(None),
     user_id: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     search: Optional[str] = Query(None)
 ):
     records = db_service.get_audit_records()
+    
+    # Determine viewer's authorized scope
+    viewer = db_service.get_employee(viewer_id) if viewer_id else None
+    is_admin = viewer and (viewer.is_admin or viewer.employee_id.upper() == "A901" or viewer.clearance == "Restricted")
+    is_manager = viewer and (viewer.is_manager or viewer.employee_id.upper().startswith("M"))
+    viewer_dept = viewer.department if viewer else None
+
     filtered = []
     for r in records:
-        if user_id and r.get("user_id", "").lower() != user_id.lower():
+        record_user = r.get("user_id", "")
+        record_dept = r.get("department", "")
+
+        # Role-based scoping enforcement:
+        if viewer:
+            if is_admin:
+                # Administrator: inspect every request across all departments
+                pass
+            elif is_manager:
+                # Department Manager: inspect only requests originating in or targeted to their department
+                dept_match = (
+                    record_dept.lower() == viewer_dept.lower() or
+                    r.get("user_department", "").lower() == viewer_dept.lower()
+                )
+                if not dept_match:
+                    continue
+            else:
+                # Regular Employee: inspect only their own submitted requests
+                if record_user.lower() != viewer.employee_id.lower():
+                    continue
+
+        # Standard filters within authorized scope:
+        if user_id and record_user.lower() != user_id.lower():
             continue
-        if department and department.lower() != "all" and r.get("department", "").lower() != department.lower():
+        if department and department.lower() != "all" and record_dept.lower() != department.lower():
             continue
         if status and status.lower() != "all" and r.get("status", "").lower() != status.lower():
             continue
         if search:
-            search_str = f"{r.get('request_id')} {r.get('question')} {r.get('user_id')} {r.get('answer')}".lower()
+            search_str = f"{r.get('request_id')} {r.get('question')} {record_user} {r.get('answer')}".lower()
             if search.lower() not in search_str:
                 continue
         filtered.append(r)
     return filtered
 
 @app.get("/api/audit/{request_id}")
-def get_audit_detail(request_id: str):
+def get_audit_detail(request_id: str, viewer_id: Optional[str] = Query(None)):
     records = db_service.get_audit_records()
+    target_record = None
     for r in records:
         if r.get("request_id", "").lower() == request_id.lower():
-            return r
-    raise HTTPException(status_code=404, detail=f"Audit record {request_id} not found.")
+            target_record = r
+            break
+    if not target_record:
+        raise HTTPException(status_code=404, detail=f"Audit record {request_id} not found.")
+
+    if viewer_id:
+        viewer = db_service.get_employee(viewer_id)
+        if viewer:
+            is_admin = viewer.is_admin or viewer.employee_id.upper() == "A901" or viewer.clearance == "Restricted"
+            is_manager = viewer.is_manager or viewer.employee_id.upper().startswith("M")
+            if is_admin:
+                return target_record
+            elif is_manager:
+                dept_match = (
+                    target_record.get("department", "").lower() == viewer.department.lower() or
+                    target_record.get("user_department", "").lower() == viewer.department.lower()
+                )
+                if not dept_match:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Access Denied: Managers are authorized to inspect {viewer.department} division records only."
+                    )
+            else:
+                if target_record.get("user_id", "").lower() != viewer.employee_id.lower():
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Access Denied: Employees are only authorized to inspect their own requests."
+                    )
+    return target_record
 
 class DismissAlertRequest(BaseModel):
     alert_id: str

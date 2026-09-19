@@ -64,6 +64,7 @@ window.SentinelAPI = {
   async getAuditLogs(filters = {}) {
     try {
       const params = new URLSearchParams();
+      if (filters.viewer_id) params.append("viewer_id", filters.viewer_id);
       if (filters.user_id) params.append("user_id", filters.user_id);
       if (filters.department) params.append("department", filters.department);
       if (filters.status) params.append("status", filters.status);
@@ -78,10 +79,13 @@ window.SentinelAPI = {
     }
   },
 
-  async getAuditDetail(request_id) {
+  async getAuditDetail(request_id, viewer_id) {
     try {
-      const res = await fetch(`${API_BASE}/api/audit/${encodeURIComponent(request_id)}`);
-      if (!res.ok) throw new Error("Audit detail not found");
+      const params = new URLSearchParams();
+      if (viewer_id) params.append("viewer_id", viewer_id);
+      const url = `${API_BASE}/api/audit/${encodeURIComponent(request_id)}${params.toString() ? `?${params.toString()}` : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Audit detail not found or unauthorized");
       return await res.json();
     } catch (err) {
       console.error(err);

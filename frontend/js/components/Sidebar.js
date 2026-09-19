@@ -1,16 +1,33 @@
 // Sidebar Navigation Component with safe SentinelIcon
-window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }) {
+window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, isManager, employee, theme, onLogout }) {
   const isLight = theme === "light";
   const navItems = [
     { id: "overview", label: "Dashboard", icon: "layout-dashboard" },
     { id: "ask-ai", label: "Ask AI", icon: "sparkles", highlight: true },
     { id: "my-requests", label: "My Requests", icon: "message-square" },
     { id: "my-access", label: "My Access", icon: "shield-alert" },
-    { id: "audit-history", label: "Audit History", icon: "file-text" },
   ];
 
   if (isAdmin) {
-    navItems.push({ id: "admin-audit", label: "Admin Audit", icon: "shield", adminOnly: true });
+    navItems.push({
+      id: "admin-audit",
+      label: "Enterprise Audit",
+      icon: "shield",
+      adminOnly: true
+    });
+  } else if (isManager) {
+    navItems.push({
+      id: "audit-history",
+      label: `${employee?.department || "Dept"} Audit`,
+      icon: "file-text",
+      managerOnly: true
+    });
+  } else {
+    navItems.push({
+      id: "audit-history",
+      label: "My Audit Trail",
+      icon: "file-text"
+    });
   }
 
   navItems.push({ id: "settings", label: "Settings", icon: "settings" });
@@ -29,7 +46,7 @@ window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }
         "Research Navigation"
       ),
       navItems.map((item) => {
-        const active = currentTab === item.id;
+        const active = currentTab === item.id || ((item.id === "admin-audit" || item.id === "audit-history") && (currentTab === "admin-audit" || currentTab === "audit-history"));
         return React.createElement(
           "button",
           {
@@ -44,6 +61,10 @@ window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }
                 ? isLight
                   ? "text-red-600 hover:bg-red-50"
                   : "text-red-400 hover:bg-red-950/30"
+                : item.managerOnly
+                ? isLight
+                  ? "text-amber-600 hover:bg-amber-50"
+                  : "text-amber-400 hover:bg-amber-950/30"
                 : isLight
                 ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
@@ -54,7 +75,9 @@ window.Sidebar = function ({ currentTab, onSelectTab, isAdmin, theme, onLogout }
           item.highlight &&
             React.createElement("span", { className: "w-1.5 h-1.5 rounded-full bg-blue-500" }),
           item.adminOnly &&
-            React.createElement("span", { className: `text-[9px] px-1 rounded font-bold ${isLight ? "bg-red-100 text-red-700" : "bg-red-900/60 text-red-300"}` }, "ADMIN")
+            React.createElement("span", { className: `text-[9px] px-1 rounded font-bold ${isLight ? "bg-red-100 text-red-700" : "bg-red-900/60 text-red-300"}` }, "ADMIN"),
+          item.managerOnly &&
+            React.createElement("span", { className: `text-[9px] px-1 rounded font-bold ${isLight ? "bg-amber-100 text-amber-700" : "bg-amber-900/60 text-amber-300"}` }, "MGR")
         );
       }),
       React.createElement(

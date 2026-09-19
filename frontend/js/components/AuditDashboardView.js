@@ -3,33 +3,82 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
   const [logs, setLogs] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedRecord, setSelectedRecord] = React.useState(initialSelectedRecord || null);
+  const [inspectError, setInspectError] = React.useState(null);
 
   const isLight = theme === "light";
 
+  // Role Scoping
+  const isAdmin = Boolean(
+    currentEmployee &&
+    (currentEmployee.is_admin ||
+      currentEmployee.employee_id === "A901" ||
+      currentEmployee.clearance === "Restricted" ||
+      currentEmployee.department === "Executive" ||
+      currentEmployee.role === "Compliance Officer" ||
+      currentEmployee.role === "Security Officer")
+  );
+
+  const isManager = Boolean(
+    currentEmployee &&
+    !isAdmin &&
+    (currentEmployee.is_manager || (currentEmployee.employee_id && currentEmployee.employee_id.startsWith("M")))
+  );
+
+  const managerDept = isManager ? currentEmployee.department : null;
+
   // Filters
-  const [filterEmployee, setFilterEmployee] = React.useState("");
-  const [filterDept, setFilterDept] = React.useState("ALL");
+  const [filterEmployee, setFilterEmployee] = React.useState(
+    (!isAdmin && !isManager && currentEmployee) ? currentEmployee.employee_id : ""
+  );
+  const [filterDept, setFilterDept] = React.useState(
+    isManager ? managerDept : "ALL"
+  );
   const [filterStatus, setFilterStatus] = React.useState("ALL");
   const [searchQuery, setSearchQuery] = React.useState("");
 
   React.useEffect(() => {
     loadAuditLogs();
-  }, []);
+  }, [filterEmployee, filterDept, filterStatus, searchQuery, currentEmployee]);
 
   const loadAuditLogs = async () => {
     setLoading(true);
     try {
+      const effectiveUserId = (!isAdmin && !isManager && currentEmployee)
+        ? currentEmployee.employee_id
+        : (filterEmployee || undefined);
+
+      const effectiveDept = isManager
+        ? managerDept
+        : (filterDept !== "ALL" ? filterDept : undefined);
+
       const records = await window.SentinelAPI.getAuditLogs({
-        user_id: filterEmployee || undefined,
-        department: filterDept !== "ALL" ? filterDept : undefined,
+        viewer_id: currentEmployee?.employee_id,
+        user_id: effectiveUserId,
+        department: effectiveDept,
         status: filterStatus !== "ALL" ? filterStatus : undefined,
         search: searchQuery || undefined,
       });
-      setLogs(records);
+      setLogs(records || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load audit logs:", err);
+      setLogs([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInspect = async (record) => {
+    setInspectError(null);
+    try {
+      if (window.SentinelAPI.getAuditDetail) {
+        const detail = await window.SentinelAPI.getAuditDetail(record.request_id, currentEmployee?.employee_id);
+        setSelectedRecord(detail || record);
+      } else {
+        setSelectedRecord(record);
+      }
+    } catch (err) {
+      console.warn("Detail fetch issue:", err);
+      setSelectedRecord(record);
     }
   };
 
@@ -54,6 +103,29 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
     }
   };
 
+  // Scope title and badge configuration
+  let scopeBadge = {
+    label: "PERSONAL SCOPE: SELF ONLY",
+    bg: "bg-blue-500/10 border-blue-500/30 text-blue-400",
+    title: `Personal Audit Trail (${currentEmployee?.employee_id || "Self"})`,
+    desc: `Compliance ledger tracking your personal queries, access permissions, and evidence trails.`
+  };
+  if (isAdmin) {
+    scopeBadge = {
+      label: "ENTERPRISE ADMIN SCOPE: ALL DEPARTMENTS",
+      bg: "bg-rose-500/10 border-rose-500/30 text-rose-400",
+      title: "Sentinel Enterprise Audit & Compliance Ledger",
+      desc: "Tamper-resistant global ledger logging every retrieval query, authorization gate decision, and synthesized response across all divisions."
+    };
+  } else if (isManager) {
+    scopeBadge = {
+      label: `DEPARTMENT MANAGER SCOPE: ${(managerDept || "").toUpperCase()} DIVISION`,
+      bg: "bg-indigo-500/10 border-indigo-500/30 text-indigo-400",
+      title: `Sentinel Department Audit Ledger (${managerDept} Division)`,
+      desc: `Authorized supervisory ledger restricted to requests and security alerts within the ${managerDept} Division.`
+    };
+  }
+
   return React.createElement(
     "div",
     { className: `space-y-6 font-mono text-xs ${isLight ? "text-slate-800" : "text-slate-100"}` },
@@ -68,19 +140,28 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
         React.createElement(
           "div",
           null,
-          React.createElement("h2", { className: "text-base font-bold uppercase tracking-tight flex items-center gap-2 font-sans" },
-            React.createElement(window.SentinelIcon, { name: "shield", className: "w-5 h-5 text-rose-500" }),
-            "Sentinel Enterprise Audit & Compliance Ledger"
+          React.createElement(
+            "div",
+            { className: "flex items-center gap-2.5 flex-wrap" },
+            React.createElement("h2", { className: "text-base font-bold uppercase tracking-tight flex items-center gap-2 font-sans" },
+              React.createElement(window.SentinelIcon, { name: isAdmin ? "shield" : isManager ? "shield-check" : "file-text", className: `w-5 h-5 ${isAdmin ? "text-rose-500" : isManager ? "text-indigo-400" : "text-blue-400"}` }),
+              scopeBadge.title
+            ),
+            React.createElement(
+              "span",
+              { className: `px-2 py-0.5 rounded text-[10px] font-bold border font-mono ${scopeBadge.bg}` },
+              scopeBadge.label
+            )
           ),
-          React.createElement("p", { className: "text-slate-400 text-xs mt-0.5" },
-            "Tamper-resistant ledger logging every retrieval query, authorization gate decision, and synthesized response."
+          React.createElement("p", { className: "text-slate-400 text-xs mt-1" },
+            scopeBadge.desc
           )
         ),
         React.createElement(
           "button",
           {
             onClick: loadAuditLogs,
-            className: `px-3 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors ${
+            className: `px-3 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-colors self-start sm:self-auto ${
               isLight ? "bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700" : "bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300"
             }`
           },
@@ -96,33 +177,62 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
         React.createElement(
           "div",
           null,
-          React.createElement("label", { className: "block text-[10px] text-slate-400 uppercase mb-1" }, "Filter Employee ID"),
+          React.createElement("label", { className: "block text-[10px] text-slate-400 uppercase mb-1" },
+            "Employee ID",
+            (!isAdmin && !isManager) && React.createElement("span", { className: "ml-1 text-slate-500 lowercase" }, "(locked)")
+          ),
           React.createElement("input", {
             type: "text",
-            value: filterEmployee,
+            value: (!isAdmin && !isManager && currentEmployee) ? currentEmployee.employee_id : filterEmployee,
+            disabled: !isAdmin && !isManager,
             onChange: (e) => setFilterEmployee(e.target.value),
-            placeholder: "e.g. U102, U205",
+            placeholder: isManager ? `e.g. ${managerDept} employee` : "e.g. U102, U205",
             className: `w-full px-2.5 py-1.5 rounded-lg border text-xs ${
-              isLight ? "bg-white border-slate-300 text-slate-900" : "bg-slate-950 border-slate-800 text-white"
+              (!isAdmin && !isManager)
+                ? (isLight ? "bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" : "bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed")
+                : (isLight ? "bg-white border-slate-300 text-slate-900" : "bg-slate-950 border-slate-800 text-white")
             }`
           })
         ),
         React.createElement(
           "div",
           null,
-          React.createElement("label", { className: "block text-[10px] text-slate-400 uppercase mb-1" }, "Department"),
-          React.createElement("select", {
-            value: filterDept,
-            onChange: (e) => setFilterDept(e.target.value),
-            className: `w-full px-2.5 py-1.5 rounded-lg border text-xs ${
-              isLight ? "bg-white border-slate-300 text-slate-900" : "bg-slate-950 border-slate-800 text-white"
-            }`
-          },
-            React.createElement("option", { value: "ALL" }, "All Departments"),
-            React.createElement("option", { value: "Finance" }, "Finance"),
-            React.createElement("option", { value: "Marketing" }, "Marketing"),
-            React.createElement("option", { value: "Engineering" }, "Engineering"),
-            React.createElement("option", { value: "Executive" }, "Executive")
+          React.createElement("label", { className: "block text-[10px] text-slate-400 uppercase mb-1" },
+            "Department",
+            isManager && React.createElement("span", { className: "ml-1 text-indigo-400 lowercase" }, "(locked: dept)")
+          ),
+          isManager ? (
+            React.createElement("div", {
+              className: `w-full px-2.5 py-1.5 rounded-lg border text-xs flex items-center justify-between ${
+                isLight ? "bg-indigo-50 border-indigo-200 text-indigo-800" : "bg-indigo-950/30 border-indigo-500/30 text-indigo-300"
+              }`
+            },
+              React.createElement("span", { className: "font-semibold" }, managerDept),
+              React.createElement("span", { className: "text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20" }, "Manager Scope")
+            )
+          ) : !isAdmin && currentEmployee ? (
+            React.createElement("div", {
+              className: `w-full px-2.5 py-1.5 rounded-lg border text-xs flex items-center justify-between ${
+                isLight ? "bg-slate-100 border-slate-200 text-slate-600" : "bg-slate-900 border-slate-800 text-slate-400"
+              }`
+            },
+              React.createElement("span", null, currentEmployee.department || "Self"),
+              React.createElement("span", { className: "text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800" }, "Personal")
+            )
+          ) : (
+            React.createElement("select", {
+              value: filterDept,
+              onChange: (e) => setFilterDept(e.target.value),
+              className: `w-full px-2.5 py-1.5 rounded-lg border text-xs ${
+                isLight ? "bg-white border-slate-300 text-slate-900" : "bg-slate-950 border-slate-800 text-white"
+              }`
+            },
+              React.createElement("option", { value: "ALL" }, "All Departments (Admin)"),
+              React.createElement("option", { value: "Finance" }, "Finance"),
+              React.createElement("option", { value: "Marketing" }, "Marketing"),
+              React.createElement("option", { value: "Engineering" }, "Engineering"),
+              React.createElement("option", { value: "Executive" }, "Executive")
+            )
           )
         ),
         React.createElement(
@@ -150,7 +260,7 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
             type: "text",
             value: searchQuery,
             onChange: (e) => setSearchQuery(e.target.value),
-            placeholder: "Search question or answer...",
+            placeholder: "Search question, user, ID...",
             className: `w-full px-2.5 py-1.5 rounded-lg border text-xs ${
               isLight ? "bg-white border-slate-300 text-slate-900" : "bg-slate-950 border-slate-800 text-white"
             }`
@@ -226,16 +336,16 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
                   ),
                   React.createElement("td", { className: "p-3" }, getStatusBadge(record.status, record)),
                   React.createElement("td", { className: "p-3 pr-4 text-right" },
-                    React.createElement(
-                      "button",
-                      {
-                        onClick: () => setSelectedRecord(record),
-                        className: `px-2.5 py-1 rounded-lg border text-xs transition-colors ${
-                          isLight ? "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700" : "bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/30"
-                        }`
-                      },
-                      "Inspect"
-                    )
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: () => handleInspect(record),
+                          className: `px-2.5 py-1 rounded-lg border text-xs transition-colors ${
+                            isLight ? "bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700" : "bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/30"
+                          }`
+                        },
+                        "Inspect"
+                      )
                   )
                 );
               })
@@ -275,6 +385,15 @@ window.AuditDashboardView = function ({ currentEmployee, initialSelectedRecord, 
               React.createElement(window.SentinelIcon, { name: "x", className: "w-5 h-5" })
             )
           ),
+
+          // Scoped Inspection Error Notice (if any)
+          inspectError &&
+            React.createElement(
+              "div",
+              { className: "mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-xs font-mono text-amber-300 flex items-center gap-2" },
+              React.createElement(window.SentinelIcon, { name: "shield-alert", className: "w-4 h-4 text-amber-400" }),
+              inspectError
+            ),
 
           // Security Violation Banner (if applicable)
           selectedRecord.event_type === "SECURITY_VIOLATION" &&

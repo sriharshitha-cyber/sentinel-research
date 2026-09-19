@@ -34,6 +34,7 @@ class AuditRecord(BaseModel):
     citations: List[CitationItem] = []
     status: str  # SUCCESS, ACCESS_LIMITED, DENIED, ERROR
     timeline: List[TimelineEvent] = []
+    visual_data: Optional[Dict[str, Any]] = None
 
 class QueryRequest(BaseModel):
     user_id: str
@@ -60,3 +61,4 @@ class QueryResponse(BaseModel):
     agent_statuses: Dict[str, str] = {}
     conflict_resolution_note: Optional[str] = None
     guardrail_warnings: List[str] = []
+    visual_data: Optional[Dict[str, Any]] = None

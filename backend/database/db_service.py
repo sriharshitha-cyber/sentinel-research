@@ -1,6 +1,8 @@
 import json
 import hashlib
 import secrets
+import random
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from ..config import DATA_DIR, COMPANY_TEMP_PASSWORD, CLEARANCE_LEVELS
@@ -15,6 +17,7 @@ class DatabaseService:
         self.employees_file = self.data_dir / "employees.json"
         self.documents_file = self.data_dir / "documents.json"
         self.audit_file = self.data_dir / "audit_logs.json"
+        self.alerts_file = self.data_dir / "manager_alerts.json"
         self._initialize_seeds_if_needed()
 
     def _hash_password(self, password: str, salt: str) -> str:
@@ -245,7 +248,8 @@ class DatabaseService:
                 clearance=e["clearance"],
                 status=e["status"],
                 must_change_password=e.get("must_change_password", False),
-                is_admin=e.get("is_admin", False)
+                is_admin=e.get("is_admin", False),
+                is_manager=e.get("is_manager", False)
             ) for e in data
         ]
 
@@ -296,3 +300,75 @@ class DatabaseService:
             return json.loads(self.audit_file.read_text(encoding='utf-8'))
         except Exception:
             return []
+
+    # Manager Alert Operations
+    def create_manager_alert(
+        self,
+        target_department: str,
+        user_id: str,
+        user_name: str,
+        user_department: str,
+        attempted_action: str,
+        threat_type: str = "UNAUTHORIZED_ACCESS",
+        target_manager_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        alerts = self.get_manager_alerts()
+        alert_id = f"ALT-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+        dept_mgr_map = {"Finance": "M301", "Marketing": "M302", "Engineering": "M303"}
+        assigned_mgr = target_manager_id or dept_mgr_map.get(target_department) or dept_mgr_map.get(user_department)
+
+        alert = {
+            "alert_id": alert_id,
+            "timestamp": datetime.now().astimezone().isoformat(),
+            "target_department": target_department,
+            "target_manager_id": assigned_mgr,
+            "user_id": user_id,
+            "user_name": user_name,
+            "user_department": user_department,
+            "attempted_action": attempted_action,
+            "threat_type": threat_type,
+            "status": "BLOCKED",
+            "dismissed": False
+        }
+        alerts.insert(0, alert)
+        self.alerts_file.write_text(json.dumps(alerts, indent=2), encoding='utf-8')
+        return alert
+
+    def get_manager_alerts(self, manager_id: Optional[str] = None, department: Optional[str] = None) -> List[Dict[str, Any]]:
+        if not hasattr(self, 'alerts_file') or not self.alerts_file.exists():
+            return []
+        try:
+            alerts = json.loads(self.alerts_file.read_text(encoding='utf-8'))
+            if not manager_id and not department:
+                return alerts
+            
+            dept_map = {"M301": "Finance", "M302": "Marketing", "M303": "Engineering"}
+            mgr_dept = dept_map.get((manager_id or "").upper(), department)
+
+            filtered = []
+            for a in alerts:
+                # Include alert if manager ID matches OR if alert relates to the manager's department
+                if manager_id and (a.get("target_manager_id") == manager_id or a.get("target_department") == mgr_dept or a.get("user_department") == mgr_dept):
+                    filtered.append(a)
+                elif department and (a.get("target_department") == department or a.get("user_department") == department):
+                    filtered.append(a)
+            return filtered
+        except Exception:
+            return []
+
+    def dismiss_manager_alert(self, alert_id: str, manager_id: Optional[str] = None) -> bool:
+        if not hasattr(self, 'alerts_file') or not self.alerts_file.exists():
+            return False
+        try:
+            alerts = json.loads(self.alerts_file.read_text(encoding='utf-8'))
+            updated = False
+            for a in alerts:
+                if a.get("alert_id") == alert_id:
+                    a["dismissed"] = True
+                    updated = True
+                    break
+            if updated:
+                self.alerts_file.write_text(json.dumps(alerts, indent=2), encoding='utf-8')
+            return updated
+        except Exception:
+            return False

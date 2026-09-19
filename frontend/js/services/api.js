@@ -1,4 +1,4 @@
-﻿// Sentinel Research Frontend API Client
+// Sentinel Research Frontend API Client
 const API_BASE = window.location.origin;
 
 window.SentinelAPI = {
@@ -108,6 +108,35 @@ window.SentinelAPI = {
     } catch (err) {
       console.error(err);
       return [];
+    }
+  },
+
+  async getManagerAlerts(managerId, department) {
+    try {
+      const params = new URLSearchParams();
+      if (managerId) params.append("manager_id", managerId);
+      if (department) params.append("department", department);
+      const res = await fetch(`${API_BASE}/api/manager/alerts?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch manager alerts");
+      return await res.json();
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  },
+
+  async dismissManagerAlert(alertId, managerId) {
+    try {
+      const res = await fetch(`${API_BASE}/api/manager/alerts/dismiss`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alert_id: alertId, manager_id: managerId }),
+      });
+      if (!res.ok) throw new Error("Failed to dismiss alert");
+      return await res.json();
+    } catch (err) {
+      console.error(err);
+      return { success: false };
     }
   },
 };

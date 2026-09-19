@@ -63,5 +63,47 @@
     "password_salt": "c9a8f47b2e1d",
     "must_change_password": true,
     "is_admin": false
+  },
+  {
+    "employee_id": "M301",
+    "name": "Finance Manager",
+    "email": "m301@xyz.com",
+    "department": "Finance",
+    "role": "Finance Manager",
+    "clearance": "Confidential",
+    "status": "active",
+    "password_hash": "aa6650e1255574ca2869031c38b040f2932057d4b1209442a3ac71ba5ff8ba5c",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": false,
+    "is_admin": false,
+    "is_manager": true
+  },
+  {
+    "employee_id": "M302",
+    "name": "Marketing Manager",
+    "email": "m302@xyz.com",
+    "department": "Marketing",
+    "role": "Marketing Manager",
+    "clearance": "Confidential",
+    "status": "active",
+    "password_hash": "aa6650e1255574ca2869031c38b040f2932057d4b1209442a3ac71ba5ff8ba5c",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": false,
+    "is_admin": false,
+    "is_manager": true
+  },
+  {
+    "employee_id": "M303",
+    "name": "Engineering Manager",
+    "email": "m303@xyz.com",
+    "department": "Engineering",
+    "role": "Engineering Manager",
+    "clearance": "Confidential",
+    "status": "active",
+    "password_hash": "aa6650e1255574ca2869031c38b040f2932057d4b1209442a3ac71ba5ff8ba5c",
+    "password_salt": "c9a8f47b2e1d",
+    "must_change_password": false,
+    "is_admin": false,
+    "is_manager": true
   }
 ]

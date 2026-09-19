@@ -1,7 +1,8 @@
 // Top Header Component with Prominent Dedicated Log Out Button
-window.Header = function ({ employee, onLogout, theme, onToggleTheme }) {
+window.Header = function ({ employee, onLogout, theme, onToggleTheme, managerAlertCount = 0, onOpenAlerts }) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const isLight = theme === "light";
+  const isManager = employee && (employee.is_manager || employee.employee_id.startsWith("M"));
 
   return React.createElement(
     "header",
@@ -74,6 +75,35 @@ window.Header = function ({ employee, onLogout, theme, onToggleTheme }) {
         )
       ),
 
+      // Manager Security Alerts Bell Button (Only rendered for department managers)
+      isManager &&
+        React.createElement(
+          "button",
+          {
+            type: "button",
+            onClick: onOpenAlerts,
+            className: `relative py-1.5 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all shadow-sm ${
+              managerAlertCount > 0
+                ? "bg-amber-950/60 hover:bg-amber-900/80 border-amber-500/60 text-amber-300 ring-1 ring-amber-500/40"
+                : isLight
+                ? "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700"
+                : "bg-slate-950 hover:bg-slate-800 border-slate-700 text-slate-300"
+            }`,
+            title: `Department Manager Alerts: ${managerAlertCount} unacknowledged`
+          },
+          React.createElement(window.SentinelIcon, {
+            name: "bell",
+            className: `w-3.5 h-3.5 ${managerAlertCount > 0 ? "text-amber-400 animate-bounce" : "text-slate-400"}`
+          }),
+          React.createElement("span", { className: "hidden sm:inline font-mono font-bold" }, "Manager Alerts"),
+          managerAlertCount > 0 &&
+            React.createElement(
+              "span",
+              { className: "px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold shadow-sm" },
+              managerAlertCount
+            )
+        ),
+
       // Employee Profile Chip
       React.createElement(
         "div",
@@ -82,13 +112,18 @@ window.Header = function ({ employee, onLogout, theme, onToggleTheme }) {
         }` },
         React.createElement(
           "div",
-          { className: "w-7 h-7 rounded-md bg-blue-600/10 text-blue-600 font-bold flex items-center justify-center" },
+          { className: `w-7 h-7 rounded-md font-bold flex items-center justify-center ${
+            isManager ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-blue-600/10 text-blue-600"
+          }` },
           employee.name.charAt(0)
         ),
         React.createElement(
           "div",
           { className: "text-left hidden sm:block" },
-          React.createElement("div", { className: `font-medium ${isLight ? "text-slate-900" : "text-white"}` }, employee.name),
+          React.createElement("div", { className: `font-medium flex items-center gap-1.5 ${isLight ? "text-slate-900" : "text-white"}` },
+            employee.name,
+            isManager && React.createElement("span", { className: "text-[9px] font-mono px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30" }, "MANAGER")
+          ),
           React.createElement("div", { className: "text-[11px] text-slate-400" }, `${employee.department} • ${employee.clearance}`)
         )
       ),

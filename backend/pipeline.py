@@ -133,6 +133,16 @@ class SentinelPipeline:
             )
             agent_statuses["Audit Agent"] = "Completed"
 
+            # Create manager alert for the employee's department manager
+            self.db.create_manager_alert(
+                target_department=employee.department,
+                user_id=employee.employee_id,
+                user_name=employee.name,
+                user_department=employee.department,
+                attempted_action=f"Security Violation: {threat['threat_type']} ('{question}')",
+                threat_type=threat["threat_type"]
+            )
+
             return QueryResponse(
                 request_id=req_id,
                 timestamp=audit_record.timestamp,
@@ -177,6 +187,22 @@ class SentinelPipeline:
 
         blocked_count = len(auth_decisions) - len(authorized_doc_ids)
         allowed_count = len(authorized_doc_ids)
+
+        # If any documents were denied, trigger manager alerts for the respective department managers
+        if blocked_count > 0:
+            for decision in auth_decisions:
+                if decision.decision == "DENY":
+                    doc_meta = next((d for d in candidate_metadata if d.get("document_id") == decision.document_id), {})
+                    allowed_depts = doc_meta.get("allowed_departments", [])
+                    target_dept = allowed_depts[0] if allowed_depts else employee.department
+                    self.db.create_manager_alert(
+                        target_department=target_dept,
+                        user_id=employee.employee_id,
+                        user_name=employee.name,
+                        user_department=employee.department,
+                        attempted_action=f"Unauthorized access attempt to {decision.document_id} ({doc_meta.get('title', 'Protected Document')}): {decision.reason}",
+                        threat_type="UNAUTHORIZED_ACCESS"
+                    )
 
         if blocked_count > 0 and allowed_count == 0:
             agent_statuses["Authorization Gate"] = f"Blocked ({blocked_count} blocked, 0 authorized)"
@@ -226,6 +252,10 @@ class SentinelPipeline:
             conflict_note=conflict_note,
             timeline=timeline
         )
+        # Generate monthly visual metrics (charts, pie/donut, KPI) ONLY from authorized evidence
+        visual_data = None
+        if len(reconciled_evidence) > 0:
+            visual_data = self.answer_agent.generate_visual_data(question, reconciled_evidence)
         agent_statuses["Answer Agent"] = "Completed"
 
         # 9. Citation Generation (ONLY authorized evidence)
@@ -256,7 +286,8 @@ class SentinelPipeline:
             answer=final_answer,
             citations=citations,
             status=request_status,
-            timeline=timeline
+            timeline=timeline,
+            visual_data=visual_data
         )
         agent_statuses["Audit Agent"] = "Completed"
 
@@ -280,5 +311,6 @@ class SentinelPipeline:
             timeline=timeline,
             agent_statuses=agent_statuses,
             conflict_resolution_note=conflict_note,
-            guardrail_warnings=guardrail_warnings
+            guardrail_warnings=guardrail_warnings,
+            visual_data=visual_data
         )

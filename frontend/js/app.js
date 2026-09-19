@@ -8,6 +8,8 @@ function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showMismatchModal, setShowMismatchModal] = useState(false);
   const [inspectRecord, setInspectRecord] = useState(null);
+  const [managerAlerts, setManagerAlerts] = useState([]);
+  const [showManagerAlertModal, setShowManagerAlertModal] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem("sentinel_theme") || "dark");
   const [stats, setStats] = useState({
     total: 12,
@@ -17,6 +19,7 @@ function App() {
 
   const isLight = theme === "light";
   const isAnimated = theme === "animated";
+  const isManager = Boolean(currentUser && (currentUser.is_manager || (currentUser.employee_id && currentUser.employee_id.startsWith("M"))));
 
   // Apply theme to body element (supports "light", "dark", "animated")
   useEffect(() => {
@@ -43,6 +46,31 @@ function App() {
     }
   }, []);
 
+  // Manager Alerts Polling / Loading
+  useEffect(() => {
+    if (isManager && currentUser) {
+      window.SentinelAPI.getManagerAlerts(currentUser.employee_id, currentUser.department)
+        .then((alerts) => {
+          setManagerAlerts(alerts || []);
+          const unread = (alerts || []).filter((a) => !a.dismissed);
+          if (unread.length > 0) {
+            setShowManagerAlertModal(true);
+          }
+        })
+        .catch(console.error);
+    } else {
+      setManagerAlerts([]);
+      setShowManagerAlertModal(false);
+    }
+  }, [currentUser?.employee_id, isManager]);
+
+  const handleDismissManagerAlert = async (alertId) => {
+    await window.SentinelAPI.dismissManagerAlert(alertId, currentUser?.employee_id);
+    setManagerAlerts((prev) =>
+      prev.map((a) => (a.alert_id === alertId ? { ...a, dismissed: true } : a))
+    );
+  };
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : prev === "light" ? "animated" : "dark"));
   };
@@ -58,6 +86,8 @@ function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     setLastResponse(null);
+    setManagerAlerts([]);
+    setShowManagerAlertModal(false);
     localStorage.removeItem("sentinel_user");
   };
 
@@ -68,6 +98,13 @@ function App() {
       authorized: prev.authorized + (response.status === "SUCCESS" ? 1 : 0),
       limited: prev.limited + (response.status !== "SUCCESS" ? 1 : 0),
     }));
+
+    // If active manager, refresh alerts to capture new blocked attempts
+    if (isManager && currentUser) {
+      window.SentinelAPI.getManagerAlerts(currentUser.employee_id, currentUser.department)
+        .then((alerts) => setManagerAlerts(alerts || []))
+        .catch(console.error);
+    }
   };
 
   // If not logged in, show LoginView
@@ -100,6 +137,8 @@ function App() {
       onLogout: handleLogout,
       theme: theme,
       onToggleTheme: toggleTheme,
+      managerAlertCount: managerAlerts.filter((a) => !a.dismissed).length,
+      onOpenAlerts: () => setShowManagerAlertModal(true),
     }),
 
     // Main Workspace Layout
@@ -332,6 +371,20 @@ function App() {
     showMismatchModal &&
       React.createElement(window.ProfileMismatchModal, {
         onClose: () => setShowMismatchModal(false),
+        theme: theme,
+      }),
+
+    // Manager Security Alert Pop-up Modal
+    showManagerAlertModal && isManager &&
+      React.createElement(window.ManagerAlertModal, {
+        manager: currentUser,
+        alerts: managerAlerts,
+        onClose: () => setShowManagerAlertModal(false),
+        onDismissAlert: handleDismissManagerAlert,
+        onInspectAlert: (alert) => {
+          setShowManagerAlertModal(false);
+          setCurrentTab("audit-history");
+        },
         theme: theme,
       }),
 

@@ -1,6 +1,7 @@
 import os
 from typing import Optional, List
 from pathlib import Path
+from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -65,7 +66,8 @@ def login(req: LoginRequest):
             clearance=employee.clearance,
             status=employee.status,
             must_change_password=employee.must_change_password,
-            is_admin=employee.is_admin
+            is_admin=employee.is_admin,
+            is_manager=employee.is_manager
         )
     }
 
@@ -164,6 +166,22 @@ def get_audit_detail(request_id: str):
         if r.get("request_id", "").lower() == request_id.lower():
             return r
     raise HTTPException(status_code=404, detail=f"Audit record {request_id} not found.")
+
+class DismissAlertRequest(BaseModel):
+    alert_id: str
+    manager_id: Optional[str] = None
+
+@app.get("/api/manager/alerts")
+def get_manager_alerts(
+    manager_id: Optional[str] = Query(None),
+    department: Optional[str] = Query(None)
+):
+    return db_service.get_manager_alerts(manager_id=manager_id, department=department)
+
+@app.post("/api/manager/alerts/dismiss")
+def dismiss_manager_alert(req: DismissAlertRequest):
+    success = db_service.dismiss_manager_alert(alert_id=req.alert_id, manager_id=req.manager_id)
+    return {"success": success, "alert_id": req.alert_id}
 
 # Mount frontend static files
 if FRONTEND_DIR.exists():

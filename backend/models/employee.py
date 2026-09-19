@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 class EmployeeRecord(BaseModel):
@@ -13,6 +13,7 @@ class EmployeeRecord(BaseModel):
     password_salt: str
     must_change_password: bool = True
     is_admin: bool = False
+    is_manager: bool = False
 
 class EmployeePublicProfile(BaseModel):
     employee_id: str
@@ -24,6 +25,7 @@ class EmployeePublicProfile(BaseModel):
     status: str
     must_change_password: bool
     is_admin: bool
+    is_manager: bool = False
     identity_source: str = "Company Employee Directory"
 
 class LoginRequest(BaseModel):

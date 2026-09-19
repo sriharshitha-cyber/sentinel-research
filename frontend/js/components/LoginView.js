@@ -37,9 +37,9 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
     }
   };
 
-  const fillQuickDemo = (empId) => {
+  const fillQuickDemo = (empId, pass) => {
     setIdentifier(empId);
-    setPassword("XYZ@2026");
+    setPassword(pass || (empId.startsWith("M") ? "678910" : "XYZ@2026"));
   };
 
   return React.createElement(
@@ -163,8 +163,7 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
           React.createElement(
             "div",
             { className: "flex items-center justify-between mb-1.5" },
-            React.createElement("label", { className: "text-xs font-medium text-slate-300" }, "Password"),
-            React.createElement("span", { className: "text-[10px] text-slate-500" }, "Demo: XYZ@2026")
+            React.createElement("label", { className: "text-xs font-medium text-slate-300" }, "Password")
           ),
           React.createElement("input", {
             type: "password",
@@ -196,10 +195,10 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
       React.createElement(
         "div",
         { className: "mt-5 pt-4 border-t border-slate-800/80" },
-        React.createElement("div", { className: "text-[10px] uppercase font-bold text-slate-400 mb-2 tracking-wider text-center" }, "Quick Test Profiles:"),
+        React.createElement("div", { className: "text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider text-center" }, "Quick Test Profiles:"),
         React.createElement(
           "div",
-          { className: "grid grid-cols-3 gap-1.5 text-center" },
+          { className: "grid grid-cols-3 gap-1.5 text-center mb-2.5" },
           React.createElement(
             "button",
             {
@@ -229,6 +228,44 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
               title: "U301 (Finance, Version Conflict)"
             },
             "U301 (Finance)"
+          )
+        ),
+        React.createElement("div", { className: "text-[10px] uppercase font-bold text-amber-400 mb-1.5 tracking-wider text-center flex items-center justify-center gap-1" },
+          React.createElement(window.SentinelIcon, { name: "shield-check", className: "w-3 h-3 text-amber-400" }),
+          "Department Managers:"
+        ),
+        React.createElement(
+          "div",
+          { className: "grid grid-cols-3 gap-1.5 text-center" },
+          React.createElement(
+            "button",
+            {
+              type: "button",
+              onClick: () => fillQuickDemo("M301", "678910"),
+              className: "py-1 px-2 rounded-md bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/80 text-[11px] text-amber-200 transition-colors font-medium",
+              title: "M301 (Finance Manager)"
+            },
+            "M301 (Finance Mgr)"
+          ),
+          React.createElement(
+            "button",
+            {
+              type: "button",
+              onClick: () => fillQuickDemo("M302", "678910"),
+              className: "py-1 px-2 rounded-md bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/80 text-[11px] text-amber-200 transition-colors font-medium",
+              title: "M302 (Marketing Manager)"
+            },
+            "M302 (Mktg Mgr)"
+          ),
+          React.createElement(
+            "button",
+            {
+              type: "button",
+              onClick: () => fillQuickDemo("M303", "678910"),
+              className: "py-1 px-2 rounded-md bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/80 text-[11px] text-amber-200 transition-colors font-medium",
+              title: "M303 (Engineering Manager)"
+            },
+            "M303 (Eng Mgr)"
           )
         )
       ),

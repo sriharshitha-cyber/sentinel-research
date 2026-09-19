@@ -85,7 +85,8 @@ class AuditAgent(BaseAgent):
         timeline: List[TimelineEvent],
         event_type: str = "STANDARD_QUERY",
         threat_type: Optional[str] = None,
-        action: Optional[str] = None
+        action: Optional[str] = None,
+        visual_data: Optional[Dict[str, Any]] = None
     ) -> AuditRecord:
         now_iso = datetime.now().astimezone().isoformat()
 
@@ -121,7 +122,8 @@ class AuditAgent(BaseAgent):
             answer=answer,
             citations=citations,
             status=status,
-            timeline=timeline
+            timeline=timeline,
+            visual_data=visual_data
         )
 
         self.db.append_audit_record(record)

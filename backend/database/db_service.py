@@ -110,8 +110,8 @@ class DatabaseService:
                     "version": "2.0",
                     "effective_date": "2026-09-01",
                     "status": "active",
-                    "content": "Q4 projected revenue is 120 crore.",
-                    "summary": "Official Q4 financial projection approved by Finance division."
+                    "content": "Q4 projected revenue is 120 crore. [SECTION:clearance=Restricted]Executive board note: unreleased acquisition margins projected to add 25 crore in confidential enterprise revenue.[/SECTION]",
+                    "summary": "Official Q4 financial projection approved by Finance division with granular restricted executive addendum."
                 },
                 {
                     "document_id": "DOC-102",
@@ -122,8 +122,8 @@ class DatabaseService:
                     "version": "1.0",
                     "effective_date": "2026-08-01",
                     "status": "active",
-                    "content": "The next platform release is planned for October.",
-                    "summary": "Technical platform release milestone specifications."
+                    "content": "The next platform release is planned for October. [SECTION:clearance=Restricted]Executive engineering note: zero-trust micro-kernel release codenamed Project Obsidian scheduled for Q1 2027.[/SECTION]",
+                    "summary": "Technical platform release milestone specifications with confidential micro-kernel roadmap."
                 },
                 {
                     "document_id": "DOC-201",

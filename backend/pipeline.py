@@ -234,10 +234,24 @@ class SentinelPipeline:
         )
         agent_statuses["Output Security Check"] = "Completed"
 
-        # 6. Evidence Analysis (ONLY authorized docs enter here!)
+        # 6. Evidence Analysis (ONLY authorized docs enter here! Step 2: Content-Level Redaction)
         agent_statuses["Evidence Analysis Agent"] = "Processing"
-        evidence_items = self.evidence_agent.analyze_evidence(guarded_docs, timeline)
-        agent_statuses["Evidence Analysis Agent"] = "Completed"
+        evidence_items = self.evidence_agent.analyze_evidence(
+            guarded_docs,
+            timeline,
+            employee_clearance=employee.clearance
+        )
+        total_redacted_sections = sum(item.redacted_sections_count for item in evidence_items)
+        content_redacted = total_redacted_sections > 0
+        two_tier_status = (
+            f"Step 1: Document Access Allowed • Step 2: {total_redacted_sections} Sensitive Section(s) Redacted"
+            if content_redacted
+            else "Step 1: Document Access Allowed • Step 2: Full Content Cleared"
+        )
+        if content_redacted:
+            agent_statuses["Evidence Analysis Agent"] = f"Completed ({total_redacted_sections} section(s) masked)"
+        else:
+            agent_statuses["Evidence Analysis Agent"] = "Completed"
 
         # 7. Version & Conflict Resolution
         agent_statuses["Version & Conflict Agent"] = "Processing"
@@ -287,7 +301,10 @@ class SentinelPipeline:
             citations=citations,
             status=request_status,
             timeline=timeline,
-            visual_data=visual_data
+            visual_data=visual_data,
+            content_redacted=content_redacted,
+            redacted_sections_count=total_redacted_sections,
+            two_tier_status=two_tier_status
         )
         agent_statuses["Audit Agent"] = "Completed"
 
@@ -312,5 +329,8 @@ class SentinelPipeline:
             agent_statuses=agent_statuses,
             conflict_resolution_note=conflict_note,
             guardrail_warnings=guardrail_warnings,
-            visual_data=visual_data
+            visual_data=visual_data,
+            content_redacted=content_redacted,
+            redacted_sections_count=total_redacted_sections,
+            two_tier_status=two_tier_status
         )

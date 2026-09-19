@@ -333,6 +333,29 @@ window.AnswerDisplay = function ({ response, theme }) {
         )
       ),
 
+    // Two-Tier / Two-Step Granular Verification Notice
+    response.content_redacted &&
+      React.createElement(
+        "div",
+        { className: `p-3.5 rounded-xl border text-xs font-mono flex items-start gap-2.5 ${
+          isLight ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-amber-950/40 border-amber-500/40 text-amber-200"
+        }` },
+        React.createElement(window.SentinelIcon, { name: "shield-alert", className: `w-4 h-4 flex-shrink-0 mt-0.5 ${isLight ? "text-amber-600" : "text-amber-400"}` }),
+        React.createElement(
+          "div",
+          { className: "space-y-1 leading-relaxed" },
+          React.createElement("div", { className: "font-bold flex items-center gap-2" },
+            "TWO-STEP VERIFICATION ACTIVE • GRANULAR REDACTION APPLIED",
+            React.createElement("span", { className: "text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40" },
+              `${response.redacted_sections_count || 1} Section(s) Masked`
+            )
+          ),
+          React.createElement("div", { className: "text-[11px] opacity-90" },
+            response.two_tier_status || "Step 1: Document access authorized. Step 2: Content-level redaction masked sections requiring higher clearance."
+          )
+        )
+      ),
+
     // Final Synthesized Answer Box
     React.createElement(
       "div",

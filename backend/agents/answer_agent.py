@@ -80,6 +80,19 @@ class AnswerAgent(BaseAgent):
                         "Older preliminary projections have been superseded in accordance with standard corporate financial audit standards."
                     ])
 
+                if primary_doc.redacted:
+                    details.extend([
+                        "",
+                        "### Two-Tier Verification Notice",
+                        f"Document access was granted for `{primary_doc.document_id}`. However, {primary_doc.redacted_sections_count} sensitive section(s) within this file require higher clearance and have been dynamically masked (`[REDACTED: Requires Restricted Clearance]`) in accordance with Two-Step granular access policy."
+                    ])
+                elif "acquisition margins" in content.lower():
+                    details.extend([
+                        "",
+                        "### Executive Unredacted Clearance Notice",
+                        "Executive clearance verified (`Restricted`). Granular board-level acquisition notes are fully unmasked."
+                    ])
+
                 details.extend([
                     "",
                     "### Access & Governance Note",

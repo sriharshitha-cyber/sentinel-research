@@ -198,14 +198,14 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
         React.createElement("div", { className: "text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider text-center" }, "Quick Test Profiles:"),
         React.createElement(
           "div",
-          { className: "grid grid-cols-3 gap-1.5 text-center mb-2.5" },
+          { className: "grid grid-cols-4 gap-1 text-center mb-2.5" },
           React.createElement(
             "button",
             {
               type: "button",
               onClick: () => fillQuickDemo("U102"),
-              className: "py-1 px-2 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[11px] text-slate-300 transition-colors",
-              title: "U102 (Finance, Authorized)"
+              className: "py-1 px-1.5 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[10px] text-slate-300 transition-colors",
+              title: "U102 (Finance, Granular Redacted)"
             },
             "U102 (Finance)"
           ),
@@ -213,21 +213,31 @@ window.LoginView = function ({ onLoginSuccess, onOpenMismatchDemo }) {
             "button",
             {
               type: "button",
+              onClick: () => fillQuickDemo("A901"),
+              className: "py-1 px-1.5 rounded-md bg-purple-950/40 hover:bg-purple-900/60 border border-purple-700/80 text-[10px] text-purple-200 transition-colors font-semibold",
+              title: "A901 (Executive, Full Unredacted)"
+            },
+            "A901 (Exec)"
+          ),
+          React.createElement(
+            "button",
+            {
+              type: "button",
               onClick: () => fillQuickDemo("U205"),
-              className: "py-1 px-2 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[11px] text-slate-300 transition-colors",
+              className: "py-1 px-1.5 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[10px] text-slate-300 transition-colors",
               title: "U205 (Marketing, Blocked)"
             },
-            "U205 (Marketing)"
+            "U205 (Mktg)"
           ),
           React.createElement(
             "button",
             {
               type: "button",
               onClick: () => fillQuickDemo("U301"),
-              className: "py-1 px-2 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[11px] text-slate-300 transition-colors",
+              className: "py-1 px-1.5 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/80 text-[10px] text-slate-300 transition-colors",
               title: "U301 (Finance, Version Conflict)"
             },
-            "U301 (Finance)"
+            "U301 (v1/v2)"
           )
         ),
         React.createElement("div", { className: "text-[10px] uppercase font-bold text-amber-400 mb-1.5 tracking-wider text-center flex items-center justify-center gap-1" },

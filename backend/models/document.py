@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class CompanyDocument(BaseModel):
@@ -31,6 +31,8 @@ class EvidenceItem(BaseModel):
     classification: str
     extracted_facts: List[str] = []
     content_snippet: str
+    redacted: bool = False
+    redacted_sections_count: int = 0
 
 class CitationItem(BaseModel):
     document_id: str

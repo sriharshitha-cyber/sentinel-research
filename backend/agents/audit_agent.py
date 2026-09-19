@@ -86,7 +86,10 @@ class AuditAgent(BaseAgent):
         event_type: str = "STANDARD_QUERY",
         threat_type: Optional[str] = None,
         action: Optional[str] = None,
-        visual_data: Optional[Dict[str, Any]] = None
+        visual_data: Optional[Dict[str, Any]] = None,
+        content_redacted: bool = False,
+        redacted_sections_count: int = 0,
+        two_tier_status: Optional[str] = None
     ) -> AuditRecord:
         now_iso = datetime.now().astimezone().isoformat()
 
@@ -123,7 +126,10 @@ class AuditAgent(BaseAgent):
             citations=citations,
             status=status,
             timeline=timeline,
-            visual_data=visual_data
+            visual_data=visual_data,
+            content_redacted=content_redacted,
+            redacted_sections_count=redacted_sections_count,
+            two_tier_status=two_tier_status
         )
 
         self.db.append_audit_record(record)

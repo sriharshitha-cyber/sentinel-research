@@ -35,6 +35,9 @@ class AuditRecord(BaseModel):
     status: str  # SUCCESS, ACCESS_LIMITED, DENIED, ERROR
     timeline: List[TimelineEvent] = []
     visual_data: Optional[Dict[str, Any]] = None
+    content_redacted: bool = False
+    redacted_sections_count: int = 0
+    two_tier_status: Optional[str] = None
 
 class QueryRequest(BaseModel):
     user_id: str
@@ -62,3 +65,6 @@ class QueryResponse(BaseModel):
     conflict_resolution_note: Optional[str] = None
     guardrail_warnings: List[str] = []
     visual_data: Optional[Dict[str, Any]] = None
+    content_redacted: bool = False
+    redacted_sections_count: int = 0
+    two_tier_status: Optional[str] = None
